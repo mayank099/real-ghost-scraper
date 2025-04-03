@@ -1,0 +1,280 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <title>Real Estate Property Scraper</title>
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+    <style>
+        /* Material Design inspired styles */
+        :root {
+            --primary-color: #4285F4;
+            --primary-dark: #3367D6;
+            --accent-color: #DB4437;
+            --accent-dark: #C31C0D;
+            --success-color: #0F9D58;
+            --success-dark: #0B8043;
+            --surface-color: #FFFFFF;
+            --background-color: #F8F9FA;
+            --on-surface-color: #202124;
+            --on-surface-medium: #5F6368;
+            --on-surface-disabled: #9AA0A6;
+            --divider-color: #DADCE0;
+            --elevation-1: 0 1px 2px 0 rgba(60, 64, 67, 0.3), 0 1px 3px 1px rgba(60, 64, 67, 0.15);
+            --elevation-2: 0 1px 2px 0 rgba(60, 64, 67, 0.3), 0 2px 6px 2px rgba(60, 64, 67, 0.15);
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: 'Roboto', sans-serif;
+            width: 340px;
+            background-color: var(--background-color);
+            color: var(--on-surface-color);
+        }
+
+        .header {
+            background-color: var(--primary-color);
+            color: white;
+            padding: 16px;
+            display: flex;
+            align-items: center;
+            box-shadow: var(--elevation-1);
+        }
+
+        .header-icon {
+            margin-right: 12px;
+            font-size: 24px;
+        }
+
+        h1 {
+            font-size: 18px;
+            font-weight: 500;
+        }
+
+        .content {
+            padding: 16px;
+        }
+
+        .card {
+            background-color: var(--surface-color);
+            border-radius: 8px;
+            box-shadow: var(--elevation-1);
+            padding: 16px;
+            margin-bottom: 16px;
+        }
+
+        .form-group {
+            margin-bottom: 16px;
+        }
+
+        .form-group:last-child {
+            margin-bottom: 0;
+        }
+
+        .form-row {
+            display: flex;
+            gap: 12px;
+        }
+
+        .form-field {
+            flex: 1;
+        }
+
+        label {
+            display: block;
+            font-size: 12px;
+            color: var(--on-surface-medium);
+            margin-bottom: 4px;
+        }
+
+        input[type="number"] {
+            width: 100%;
+            padding: 8px 12px;
+            border: 1px solid var(--divider-color);
+            border-radius: 4px;
+            font-family: 'Roboto', sans-serif;
+            font-size: 14px;
+            transition: border-color 0.2s;
+        }
+
+        input[type="number"]:focus {
+            outline: none;
+            border-color: var(--primary-color);
+        }
+
+        .button-group {
+            display: flex;
+            gap: 8px;
+            margin-bottom: 16px;
+        }
+
+        button {
+            font-family: 'Roboto', sans-serif;
+            font-size: 14px;
+            font-weight: 500;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            padding: 10px 16px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            transition: background-color 0.2s, box-shadow 0.2s, opacity 0.2s;
+            flex-grow: 1;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        button:not(:disabled):hover {
+            box-shadow: var(--elevation-2);
+        }
+
+        button .material-icons {
+            margin-right: 8px;
+            font-size: 18px;
+        }
+
+        #startScraping {
+            background-color: var(--success-color);
+            color: white;
+        }
+
+        #startScraping:not(:disabled):hover {
+            background-color: var(--success-dark);
+        }
+
+        #stopScraping {
+            background-color: var(--accent-color);
+            color: white;
+        }
+
+        #stopScraping:not(:disabled):hover {
+            background-color: var(--accent-dark);
+        }
+
+        #downloadCSV {
+            background-color: var(--primary-color);
+            color: white;
+        }
+
+        #downloadCSV:not(:disabled):hover {
+            background-color: var(--primary-dark);
+        }
+
+        button:disabled {
+            background-color: var(--divider-color);
+            color: var(--on-surface-disabled);
+            cursor: not-allowed;
+            box-shadow: none;
+            opacity: 0.7;
+        }
+
+        .status-card {
+            display: flex;
+            align-items: flex-start;
+        }
+
+        .status-icon {
+            margin-right: 12px;
+            color: var(--primary-color);
+        }
+
+        #status {
+            font-size: 14px;
+            color: var(--on-surface-medium);
+            line-height: 1.5;
+            flex: 1;
+        }
+
+        .progress-container {
+            margin-top: 12px;
+            height: 4px;
+            width: 100%;
+            background-color: #E0E0E0;
+            border-radius: 2px;
+            overflow: hidden;
+            display: none;
+        }
+
+        .progress-bar {
+            height: 100%;
+            width: 0%;
+            background-color: var(--primary-color);
+            transition: width 0.3s ease;
+        }
+
+        .footer {
+            padding: 12px 16px;
+            font-size: 12px;
+            color: var(--on-surface-medium);
+            text-align: center;
+            border-top: 1px solid var(--divider-color);
+        }
+    </style>
+</head>
+
+<body>
+    <div class="header">
+        <span class="material-icons header-icon">home_work</span>
+        <h1>Real Estate Property Scraper</h1>
+    </div>
+
+    <div class="content">
+        <div class="card">
+            <div class="form-group">
+                <div class="form-row">
+                    <div class="form-field">
+                        <label for="startPage">Start Page</label>
+                        <input type="number" id="startPage" min="1" value="1">
+                    </div>
+                    <div class="form-field">
+                        <label for="endPage">End Page</label>
+                        <input type="number" id="endPage" min="1" value="3">
+                    </div>
+                </div>
+            </div>
+            <div class="form-group">
+                <label for="delay">Delay Between Pages (ms)</label>
+                <input type="number" id="delay" min="1000" step="500" value="3000">
+            </div>
+            <div class="button-group">
+                <button id="startScraping">
+                    <span class="material-icons">play_arrow</span>
+                    Start
+                </button>
+                <button id="stopScraping" disabled>
+                    <span class="material-icons">stop</span>
+                    Stop
+                </button>
+            </div>
+
+            <button id="downloadCSV" disabled>
+                <span class="material-icons">download</span>
+                Download CSV
+            </button>
+        </div>
+
+        <div class="card status-card">
+            <span class="material-icons status-icon">info</span>
+            <div>
+                <div id="status">Ready to scrape. Navigate to a Real Estate listing page and click Start.</div>
+                <div class="progress-container">
+                    <div class="progress-bar"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="footer">
+        This extension scrapes property listings from realestate.com.au
+    </div>
+
+    <script src="popup.js"></script>
+</body>
+
+</html>
