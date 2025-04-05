@@ -16,9 +16,6 @@ document.addEventListener('DOMContentLoaded', function () {
 
     // Keep track of results
     let allResults = [];
-    
-    // Check scraping status when popup opens
-    checkScrapingStatus();
 
     // Initially disable the stop and download buttons
     stopButton.disabled = true;
@@ -186,9 +183,6 @@ document.addEventListener('DOMContentLoaded', function () {
         });
     });
 
-    // Keep track of current phase
-    let currentPhase = '';
-    
     // Listen for messages from background script
     chrome.runtime.onMessage.addListener(function (message) {
         console.log('Popup received message:', message);
@@ -208,40 +202,25 @@ document.addEventListener('DOMContentLoaded', function () {
             setTimeout(() => {
                 progressContainer.style.display = 'none';
             }, 2000);
-            
-            // Reset current phase
-            currentPhase = '';
         }
-        else if (message.action === 'urlCollectionProgress') {
-            // Only update UI if we're changing phase or progress increased
-            if (currentPhase !== 'url_collection' || message.currentPage > parseInt(progressBar.getAttribute('data-current') || 0)) {
-                currentPhase = 'url_collection';
-                
-                // Update progress status for URL collection
-                updateStatus(`Collecting URLs from page ${message.currentPage} of ${message.totalPages}`, 'progress');
-    
-                // Always update progress incrementally
-                updateProgress(message.currentPage, message.totalPages);
-                progressBar.setAttribute('data-current', message.currentPage);
-            }
+        else if (message.action === 'scrapingProgress') {
+            // Update progress status for listing pages
+            updateStatus(`Scraping page ${message.currentPage}: Found ${message.results.length} properties`, 'progress');
+
+            // Update total results count
+            allResults = message.total || allResults.length;
+
+            // Update progress based on current page vs. total pages
+            const startPage = parseInt(startPageInput.value) || 1;
+            const endPage = parseInt(endPageInput.value) || 1;
+            const totalPages = endPage - startPage + 1;
+            const currentPageIndex = message.currentPage - startPage + 1;
+
+            updateProgress(currentPageIndex, totalPages);
         }
         else if (message.action === 'detailProgress') {
-            // Only update UI if we're changing phase or progress increased
-            if (message.overallProgress && message.overallProgress.total > 0) {
-                const current = message.overallProgress.current;
-                const total = message.overallProgress.total;
-                
-                if (currentPhase !== 'detail_scraping' || current > parseInt(progressBar.getAttribute('data-current') || 0)) {
-                    currentPhase = 'detail_scraping';
-                    
-                    // Update progress for detail page scraping
-                    updateStatus(`Visiting property: ${current} of ${total}`, 'progress');
-                    
-                    // Always update progress incrementally
-                    updateProgress(current, total);
-                    progressBar.setAttribute('data-current', current);
-                }
-            }
+            // Update progress for detail page scraping
+            updateStatus(`Visiting property details: ${message.current} of ${message.total}`, 'progress');
         }
         else if (message.action === 'scrapingError') {
             // Handle errors
@@ -254,26 +233,6 @@ document.addEventListener('DOMContentLoaded', function () {
             // Download started
             updateStatus(`CSV download initiated: ${message.filename}`, 'success');
             setPulsingAnimation(false);
-        }
-        else if (message.action === 'enableDownload') {
-            // Enable download button after stopping scraping
-            downloadButton.disabled = false;
-            updateStatus('Scraping stopped. Ready to download CSV.', 'warning');
-        }
-        else if (message.action === 'disableDownload') {
-            // Disable download button when there's no data
-            downloadButton.disabled = true;
-        }
-        else if (message.action === 'resetUI') {
-            // Reset UI state completely
-            startButton.disabled = false;
-            stopButton.disabled = true;
-            progressContainer.style.display = 'none';
-            progressBar.style.width = '0%';
-            setPulsingAnimation(false);
-            updateStatus('Scraping stopped', 'warning');
-            // Reset tracking variables
-            currentPhase = '';
         }
         else if (message.action === 'statusUpdate') {
             // General status updates
@@ -291,37 +250,4 @@ document.addEventListener('DOMContentLoaded', function () {
         }
     `;
     document.head.appendChild(style);
-    
-    // Function to check the current scraping status from the background script
-    function checkScrapingStatus() {
-        chrome.runtime.sendMessage({ action: 'getScrapingStatus' }, function(response) {
-            if (chrome.runtime.lastError) {
-                console.error("Error getting scraping status:", chrome.runtime.lastError);
-                return;
-            }
-            
-            if (response && response.isProcessing) {
-                // Scraping is in progress
-                startButton.disabled = true;
-                stopButton.disabled = false;
-                downloadButton.disabled = true;
-                updateStatus('Scraping in progress...', 'progress');
-                setPulsingAnimation(true);
-                
-                // Show progress if available
-                if (response.progress) {
-                    progressContainer.style.display = 'block';
-                    const percentage = (response.progress.current / response.progress.total) * 100;
-                    progressBar.style.width = `${percentage}%`;
-                    updateStatus(`Visiting property: ${response.progress.current} of ${response.progress.total}`, 'progress');
-                }
-            } else if (response && response.hasData) {
-                // Scraping is not in progress but there's data available for download
-                startButton.disabled = false;
-                stopButton.disabled = true;
-                downloadButton.disabled = false;
-                updateStatus('Ready to download data', 'success');
-            }
-        });
-    }
 });
